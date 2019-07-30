@@ -3,92 +3,46 @@
 
 ## Introduction
 
-In this lesson, we'll review all the guidelines and specifications for the final project for Module 4.
+For the module 4 project, I was tasked with identifying the "best" 5 zipcodes for investing in houses (by an investment firm, not homeowners) within a region of my choice. Here, I have defined "best" as being the zipcode that strikes the best balance between return on investment (ROI) and volatility of house prices. 
 
-## Objectives
+## Overview
 
-* Understand all required aspects of the Final Project for Module 4
-* Understand all required deliverables
-* Understand what constitutes a successful project
+For those who are interested, the Jupyter Notebook containing all of the code for this project can be found here:
+* [Atlanta housing notebook](Atlanta_housing.ipynb)
 
-### Final Project Summary
+The region selected for this project was the greater metro area of Atlanta, Georgia. This region was chosen because this project's author is intimately familiar with the area, having lived there for 30 years, which ought to facilitate forming insights about the data and models for the region. 
 
-Another module down--you're absolutely crushing it! For this project, you'll get to flex your **_Time-Series_** muscles!
+Additionally, because the project was intended for use by an investment firm and not by potential homeowners, the forecast time horizon was set rather short (2-year projection) to reflect the desire for a quicker ROI. 
 
-<img src='https://raw.githubusercontent.com/learn-co-curriculum/dsc-mod-4-project/master/images/timegif.gif'>
+One final nuance was the decision to account for the 2008 housing crash. This crash made housing prices across the United States plummet universally. As a consequence, many neighborhoods experienced a rash of foreclosures while others did not. Such an event logically creates the potential to disrupt and reorient previous trends. Therefore, date of 2012-01-01 was chosen as a Day 0 for this project as it is fairly close to the date when the US housing market is known to have bottomed out and begun its slow crawl to recovery.
 
-For this module's final project, we're going to put your newfound **_Time Series Analysis_** skills to the test. You will be forecasting real estate prices of various zipcodes using data from [Zillow](https://www.zillow.com/research/data/). However, this won't be as straightforward as just running a time-series analysis--you're going to have to make some data-driven decisions and think critically along the way!
+## Methodology
 
-### The Project
+After preprocessing the data, a brief initial EDA was done to reveal overall trends. As expected, the period 2008-2011 was one of universal decline. To account for this all dates prior to 2012 were filtered out.
 
-For this project, you will be acting as a consultant for a fictional real-estate investment firm. The firm has asked you what seems like a simple question:
+<img src="Atlanta_EDA.png" width=75%>
 
-> what are the top 5 best zipcodes for us to invest in?
+I next selected a single zip code (30342) to log-transform and decompose in order to check for trends, seasonality, and stationarity of its residuals. The interesting aspect of this test's results were that an examination of the y-axis of the seasonality graph suggested that the data does not, in fact, exhibit significant seasonality. Consequently, this permitted me to develop a simpler ARIMA model that ignores seasonality (much more time efficient, thankfully).
 
-This may seem like a simple question at first glance, but there's more than a little ambiguity here that you'll have to think through in order to provide a solid recommendation. Should your recommendation be focused on profit margins only? What about risk? What sort of time horizon are you predicting against?  Your recommendation will need to detail your rationale and answer any sort of lingering questions like these in order to demonstrate how you define "best".
+<img src="Atlanta_seasonality.png" width=80%>
 
-As mentioned previously, the data you'll be working with comes from the [Zillow Research Page](https://www.zillow.com/research/data/). However, there are many options on that page, and making sure you have exactly what you need can be a bit confusing. For simplicity's sake, we have already provided the dataset for you in this repo--you will find it in the file `zillow_data.csv`.
+Then I developed an ARIMA model using the `SARIMAX` method from `statsmodels`. First, I iterated through multiple combinations of (p,d,q) parameters to select the best fit model for 30342, then built the ARIMA model accordingly. This process returned a prediction graph (seen below) that had a somewhat troubling confidence interval cone. The overall trend was positive, but the lower bound of the confidence interval actaully sloped downward from the prediction starting point, suggesting that investing in this zipcode did not guarantee profit. 
 
-## The Deliverables
+<img src="Atlanta_bad_conf_cone.png" width=80%>
 
-The goal of this project is to have you complete a very common real-world task in regard to Time-Series Modeling. However, real world problems often come with a significant degree of ambiguity, which requires you to use your knowledge of statistics and data science to think critically about and answer. While the main task in this project is Time-Series Modeling, that isn't the overall goal--it is important to understand that Time-Series Modeling is a tool in your toolbox, and the forecasts it provides you are what you'll use to answer important questions.
+Therefore, I decided to iterate through all of the zip codes in the region, using a function to find the best (p,d,q) parameters on a zip code by zip code basis, building an ARIMA model for each. This enabled me to compare the potential ROIs for each zipcode, but did not account for risky confidence intervals. 
 
-In short, to pass this project, demonstrating the quality and thoughtfulness of your overall recommendation is at least as important as successfully building a Time-Series model!
+To account for volatility (which produces wide confidence intervals in predictions), I created my own metric by which to select the least volatile zipcodes. Dubbed the Parker Confidence Score (PCS), it is calculated as follows:
+<img src="PCS.png">
+where ***n*** is the final observation in the prediction, ***Upper*** is the upper bound of the confidence interval, and ***Lower*** is the lower bound of the confidence interval. A PCS close to 1 is ideal. This score makes it possible to compare the tightness of confidence interval spread between different models. You can see below an example of a model with a good PCS score.
 
-In order to successfully complete this project, you must have:
+<img src="Atlanta_good_conf_cone.png" width=80%>
 
-* A well-documented **_Jupyter Notebook_** containing any code you've written for this project (use the notebook in this repo, `mod_4_starter_notebook.ipynb`)
-* A **_[Blog post](https://github.com/learn-co-curriculum/dsc-welcome-blogging)_**.
-* An **_'Executive Summary' PowerPoint Presentation_** that explains your rationale and methodology for determining the best zipcodes for investment.
-
-
-### Jupyter Notebook Must-Haves
-
-For this project, you will be provided with a jupyter notebook containing some starter code. If you inspect the zillow dataset file, you'll notice that the datetimes for each sale are the actual column names--this is a format you probably haven't seen before. To ensure that you're not blocked by preprocessing, we've provided some helper functions to help simplify getting the data into the correct format. You're not required to use this notebook or keep it in its current format, but we strongly recommend you consider making use of the helper functions so you can spend your time working on the parts of the project that matter.
-
-#### Organization/Code Cleanliness
-
-The notebook should be well organized, easy to follow, and code is modularized and commented where appropriate.
-
-* Level Up: The notebook contains well-formatted, professional looking markdown cells explaining any substantial code. All functions have docstrings that act as professional-quality documentation.
-* The notebook is written to technical audiences with a way to both understand your approach and reproduce your results. The target audience for this deliverable is other data scientists looking to validate your findings.
-* Data visualizations you create should be clearly labeled and contextualized--that is, they fit with the surrounding code or problems you're trying to solve. No dropping data visualizations randomly around your notebook without any context!
-
-#### Findings
-
-Your notebook should briefly mention the metrics you have defined as "best", so that any readers understand what technical metrics you are trying to optimize for (for instance, risk vs profitability, ROI yield, etc.). You do **not** need to explain or defend your your choices in the notebook--the blog post and executive summary presentation are both better suited to that sort of content. However, the notebook should provide enough context about your definition for "best investment" so that they understand what the code you are writing is trying to solve.
-
-#### Visualizations
-
-Time-Series Analysis is an area of data science that lends itself well to intuitive data visualizations. Whereas we may not be able to visualize the best choice in a classification or clustering problem with a high-dimensional dataset, that isn't an issue with Time Series data. As such, **_any findings worth mentioning in this problem are probably also worth visualizing_**. Your notebook should make use of data visualizations as appropriate to make your findings obvious to any readers.
-
-Also, remember that if a visualization is worth creating, then it's also worth taking the extra few minutes to make sure that it is easily understandable and well-formatted. When creating visualizations, make sure that they have:
-
-* A title
-* Clearly labeled X and Y axes, with appropriate scale for each
-* A legend, when necessary
-* No overlapping text that makes it hard to read
-* An intelligent use of color--multiple lines should have different colors and/or symbols to make them easily differentiable to the eye
-* An appropriate amount of information--avoid creating graphs that are "too busy"--for instance, don't create a line graph with 25 different lines on it
-
-<center><img src='images/bad-graph-1.png' height=100% width=100%>
-There's just too much going on in this graph for it to be readable--don't make the same mistake! (<a href='http://genywealth.com/wp-content/uploads/2010/03/line-graph.php_.png'>Source</a>)</center>
-
-### Blog Post Must-Haves
-
-Refer back to the [Blogging Guidelines](https://github.com/learn-co-curriculum/dsc-welcome-blogging) for the technical requirements and blog ideas.
+I then filtered all Atlanta zip codes to find those with a PCS greater than .8, and from those finally selected the five zip codes with the highest ROI.
 
 
-### Executive Summary Must-Haves
+## Results
 
-Your presentation should:
+I highly recommend purchasing real estate in the Atlanta zipcodes of 30317, 30030, 30341, 30087, and 30319 which correspond to the areas of Kirkwood, Decatur, Chamblee, Rockbridge, and Brookhaven, respectively. Based on the modeling work, I have concluded that if an investment firm were to buy a house of mean value in each of these zip codes, you would most likely see a minimum 2-year return on investment of 7-21%, a maximum 2-year ROI of 27-48%, and an average 2-year ROI of 18-34%. That's pretty good.
 
-Contain between 5-10 professional quality slides detailing:
-
-* A high-level overview of your methodology and findings, including the 5 zipcodes you recommend investing in
-* A brief explanation of what metrics you defined as "best" in order complete this project
-
-As always, this prresentation should also:
-
-* Take no more than 5 minutes to present
-* Avoid technical jargon and explain results in a clear, actionable way for non-technical audiences.
+<img src='ATL_top_five.png' width=80%>
