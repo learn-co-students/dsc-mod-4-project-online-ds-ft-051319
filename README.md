@@ -36,7 +36,7 @@ To account for volatility (which produces wide confidence intervals in predictio
 
 <img src="PCS.png" width ="300" class="center">
 
-where ***n*** is the final observation in the prediction, ***Upper*** is the upper bound of the confidence interval, and ***Lower*** is the lower bound of the confidence interval. A PCS close to 1 is ideal. This score makes it possible to compare the tightness of confidence interval spread between different models. You can see below an example of a model with a good PCS score.
+where ***n*** is the final observation in the prediction, ***Upper*** is the upper bound of the confidence interval, and ***Lower*** is the lower bound of the confidence interval. A PCS close to 1 is ideal. This score makes it possible to compare the tightness of confidence interval spread between different models by calculating the ratio of confidence interval spread to total height of confidence interval. You can see below an example of a model with a good PCS score.
 
 <img src="Atlanta_good_conf_cone.png" width=80% class="center">
 
@@ -48,3 +48,5 @@ I then filtered all Atlanta zip codes to find those with a PCS greater than .8, 
 I highly recommend purchasing real estate in the Atlanta zipcodes of 30317, 30030, 30341, 30087, and 30319 which correspond to the areas of Kirkwood, Decatur, Chamblee, Rockbridge, and Brookhaven, respectively. Based on the modeling work, I have concluded that if an investment firm were to buy a house of mean value in each of these zip codes, you would most likely see a minimum 2-year return on investment of 7-21%, a maximum 2-year ROI of 27-48%, and an average 2-year ROI of 18-34%. That's pretty good.
 
 <img src='ATL_top_five.png' width=80% class="center">
+
+For your convenience, here is a link to the [slideshow presentation](Atlanta_Housing_Prices.pptx) of this project.
